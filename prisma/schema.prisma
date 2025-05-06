@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  CONTRIBUTOR
+  INVESTOR
+}
+
+enum ListingStatus {
+  DRAFT
+  PENDING
+  ACTIVE
+  ARCHIVED
+}
+
+enum EngagementType {
+  SELF
+  MANAGED
+  FUND
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(INVESTOR)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  listings           Listing[]          @relation("UserListings")
+  engagementRequests EngagementRequest[] @relation("UserEngagements")
+}
+
+model Listing {
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  title         String
+  description   String
+  countryCode   String
+  sector        String
+  sizeMin       Float
+  sizeMax       Float
+  returnPct     Float
+  timeline      String
+  impactMetrics Json
+  mediaUrls     String[]
+  status        ListingStatus @default(DRAFT)
+  featured      Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  createdBy   User   @relation("UserListings", fields: [userId], references: [id])
+  userId      String @db.ObjectId
+
+  engagementRequests EngagementRequest[] @relation("ListingEngagements")
+}
+
+model EngagementRequest {
+  id        String         @id @default(auto()) @map("_id") @db.ObjectId
+  type      EngagementType
+  amount    Float
+  details   String?
+  status    String        @default("PENDING")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  user      User?    @relation("UserEngagements", fields: [userId], references: [id])
+  userId    String?  @db.ObjectId
+  listing   Listing  @relation("ListingEngagements", fields: [listingId], references: [id])
+  listingId String   @db.ObjectId
+}
