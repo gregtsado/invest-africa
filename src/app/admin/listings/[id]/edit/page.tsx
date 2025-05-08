@@ -2,17 +2,24 @@ import { prisma } from '@/lib/prisma'
 import { ListingForm } from '@/components/ListingForm'
 import { notFound } from 'next/navigation'
 
-export default async function EditListing({
-  params,
-}: {
-  params: { id: string }
-}) {
+interface PageProps {
+  params: {
+    id: string
+  }
+}
+
+export default async function EditListing({ params }: PageProps) {
   const listing = await prisma.listing.findUnique({
     where: { id: params.id },
   })
 
   if (!listing) {
     notFound()
+  }
+
+  const listingData = {
+    ...listing,
+    impactMetrics: listing.impactMetrics as Record<string, any>
   }
 
   return (
@@ -30,7 +37,7 @@ export default async function EditListing({
         <div className="bg-white shadow sm:rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <ListingForm
-              initialData={listing}
+              initialData={listingData}
               isEdit={true}
             />
           </div>
