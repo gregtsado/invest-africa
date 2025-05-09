@@ -19,7 +19,7 @@ export default async function EditListing({ params }: PageProps) {
 
   const listingData = {
     ...listing,
-    impactMetrics: listing.impactMetrics as Record<string, any>
+    impactMetrics: listing.impactMetrics as Record<string, unknown>
   }
 
   return (
