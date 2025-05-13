@@ -1,13 +1,18 @@
 import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 
+type Context = {
+  params: Promise<{ id: string }>
+}
+
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: Context
 ) {
   try {
+    const { id } = await context.params
     const listing = await prisma.listing.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!listing) {

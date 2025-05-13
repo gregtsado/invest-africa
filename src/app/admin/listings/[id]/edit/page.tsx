@@ -1,26 +1,32 @@
-import { prisma } from '@/lib/prisma'
-import { ListingForm } from '@/components/ListingForm'
-import { notFound } from 'next/navigation'
+import React from 'react';
+import { notFound } from 'next/navigation';
+import { prisma } from '@/lib/prisma';
+import { ListingForm } from '@/components/ListingForm';
 
-interface PageProps {
-  params: {
-    id: string
-  }
-}
+type PageProps = {
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<any>;
+};
 
-export default async function EditListing({ params }: PageProps) {
+export default async function EditListing({
+  params,
+  searchParams
+}: PageProps) {
+  const resolvedParams = await params;
+  const { id } = resolvedParams;
+  
   const listing = await prisma.listing.findUnique({
-    where: { id: params.id },
-  })
+    where: { id },
+  });
 
   if (!listing) {
-    notFound()
+    notFound();
   }
 
   const listingData = {
     ...listing,
-    impactMetrics: listing.impactMetrics as Record<string, unknown>
-  }
+    impactMetrics: listing.impactMetrics as Record<string, unknown>,
+  };
 
   return (
     <div className="py-10">
@@ -44,5 +50,5 @@ export default async function EditListing({ params }: PageProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

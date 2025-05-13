@@ -3,30 +3,24 @@ import { NextResponse } from 'next/server'
 import type { NextRequestWithAuth } from 'next-auth/middleware'
 
 // Middleware function without auth wrapper for public routes
-export function middleware(request: NextRequestWithAuth) {
-  const { pathname } = request.nextUrl
-
-  // Public routes that don't require authentication
-  const publicRoutes = [
-    '/',
-    '/investments',
-    '/impact',
-    '/auth/signin',
-    '/auth/signup',
-    '/api/auth/register',
-  ]
-  if (publicRoutes.includes(pathname)) {
-    return NextResponse.next()
-  }
-
-  // For all other routes, use withAuth middleware
-  return withAuthMiddleware(request)
-}
-
-const withAuthMiddleware = withAuth(
-  function auth(request: NextRequestWithAuth) {
+export default withAuth(
+  // First argument - middleware configuration
+  function middleware(request: NextRequestWithAuth) {
     const { pathname } = request.nextUrl
     const { token } = request.nextauth
+
+    // Public routes that don't require authentication
+    const publicRoutes = [
+      '/',
+      '/investments',
+      '/impact',
+      '/auth/signin',
+      '/auth/signup',
+      '/api/auth/register',
+    ]
+    if (publicRoutes.includes(pathname)) {
+      return NextResponse.next()
+    }
 
     // Admin-only routes
     const adminRoutes = ['/admin', '/api/admin']
@@ -46,6 +40,7 @@ const withAuthMiddleware = withAuth(
 
     return NextResponse.next()
   },
+  // Second argument - options
   {
     callbacks: {
       authorized: ({ token }) => !!token,

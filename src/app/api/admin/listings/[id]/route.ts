@@ -1,11 +1,15 @@
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { NextRequest, NextResponse } from 'next/server'
-import { authOptions } from '../../../auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
+
+type Context = {
+  params: Promise<{ id: string }>
+}
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: Context
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -17,9 +21,10 @@ export async function PATCH(
       )
     }
 
+    const { id } = await context.params
     const data = await req.json()
     const listing = await prisma.listing.update({
-      where: { id: params.id },
+      where: { id },
       data,
     })
 
@@ -35,7 +40,7 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: Context
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -47,11 +52,12 @@ export async function DELETE(
       )
     }
 
+    const { id } = await context.params
     await prisma.listing.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
-    return new NextResponse(null, { status: 204 })
+    return NextResponse.json({ status: 'ok' })
   } catch (error) {
     console.error('Error deleting listing:', error)
     return NextResponse.json(

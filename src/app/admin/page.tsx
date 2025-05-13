@@ -22,7 +22,13 @@ export default function AdminPage() {
       try {
         const response = await fetch('/api/admin/listings')
         const data = await response.json()
-        setListings(data)
+        // Validate and transform the data to ensure it matches our Listing type
+        const typedListings: Listing[] = data.map((item: any) => ({
+          ...item,
+          status: item.status as Listing['status'],
+          createdAt: new Date(item.createdAt)
+        }))
+        setListings(typedListings)
       } catch {
         setError('Failed to load listings')
       } finally {
@@ -33,9 +39,9 @@ export default function AdminPage() {
     fetchListings()
   }, [])
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     try {
-      await fetch(`/api/admin/listings/${id}`, {
+      fetch(`/api/admin/listings/${id}`, {
         method: 'DELETE',
       })
       setListings(listings.filter((listing) => listing.id !== id))
@@ -44,7 +50,7 @@ export default function AdminPage() {
     }
   }
 
-  async function handleStatusChange(id: string, newStatus: string) {
+  async function handleStatusChange(id: string, newStatus: Listing['status']) {
     try {
       const response = await fetch(`/api/admin/listings/${id}`, {
         method: 'PATCH',

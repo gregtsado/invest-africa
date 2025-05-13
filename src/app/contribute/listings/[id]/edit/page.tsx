@@ -2,14 +2,17 @@ import { prisma } from '@/lib/prisma'
 import { ListingForm } from '@/components/ListingForm'
 import { notFound } from 'next/navigation'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
+
+type PageProps = {
+  params: Promise<{ id: string }>
+}
 
 export default async function EditContributorListing({
   params,
-}: {
-  params: { id: string }
-}) {
+}: PageProps) {
   const session = await getServerSession(authOptions)
+  const { id } = await params
   
   if (!session || !['ADMIN', 'CONTRIBUTOR'].includes(session.user?.role as string)) {
     notFound()
@@ -17,13 +20,18 @@ export default async function EditContributorListing({
 
   const listing = await prisma.listing.findUnique({
     where: {
-      id: params.id,
-      userId: session.user.id, // Ensure the listing belongs to the user
+      id,
+      userId: session.user.id,
     },
   })
 
   if (!listing) {
     notFound()
+  }
+
+  const listingData = {
+    ...listing,
+    impactMetrics: listing.impactMetrics as Record<string, any>,
   }
 
   return (
@@ -41,7 +49,7 @@ export default async function EditContributorListing({
         <div className="bg-white shadow sm:rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <ListingForm
-              initialData={listing}
+              initialData={listingData}
               isEdit={true}
             />
           </div>

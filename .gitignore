@@ -13,7 +13,6 @@
 .service-account-key.json
 # testing
 /coverage
-service-account-key.json
 # next.js
 /.next/
 /out/
