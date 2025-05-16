@@ -2,21 +2,22 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { ListingForm } from '@/components/ListingForm';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
-type PageProps = {
-  params: Promise<{ id: string }>;
-  searchParams?: Promise<any>;
-};
+interface PageProps {
+  params: { id: string };
+}
 
-export default async function EditListing({
-  params,
-  searchParams
-}: PageProps) {
-  const resolvedParams = await params;
-  const { id } = resolvedParams;
+export default async function EditListing({ params }: PageProps) {
+  const session = await getServerSession(authOptions);
   
+  if (!session || session.user?.role !== 'ADMIN') {
+    notFound();
+  }
+
   const listing = await prisma.listing.findUnique({
-    where: { id },
+    where: { id: params.id },
   });
 
   if (!listing) {
