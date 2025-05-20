@@ -88,9 +88,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
       {/* Feature Grid */}
       <section className="relative">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="relative overflow-hidden rounded-2xl bg-gray-900/50 backdrop-blur-sm">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="feature-card">
               <div className="p-8">
                 <Image
                   src="/images/agriculture.jpg"
