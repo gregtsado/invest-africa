@@ -3,8 +3,10 @@ import { getServerSession } from 'next-auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { authOptions } from '@/lib/auth'
 
+
 export async function PATCH(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
+
   try {
     const session = await getServerSession(authOptions)
 
@@ -12,7 +14,9 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+
     const { id } = params // ✅ FIX: No need for async handling
+
     const data = await req.json()
     const listing = await prisma.listing.update({
       where: { id },
@@ -26,8 +30,10 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
   }
 }
 
+
 export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
+
   try {
     const session = await getServerSession(authOptions)
 
@@ -39,6 +45,7 @@ export async function DELETE(req: NextRequest, props: { params: Promise<{ id: st
     await prisma.listing.delete({ where: { id } })
 
     return NextResponse.json({ success: true })
+
   } catch (error) {
     console.error('Error deleting listing:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

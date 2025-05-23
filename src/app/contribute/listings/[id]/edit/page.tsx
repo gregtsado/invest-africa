@@ -4,6 +4,12 @@ import { notFound, redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
+
+type PageProps = {
+  params: Promise<{ id: string }>
+}
+
+
 interface PageProps {
   params: Promise<{ id: string }>
 }
@@ -12,6 +18,7 @@ export default async function EditListing({
   params,
 }: PageProps) {
   const session = await getServerSession(authOptions)
+  const { id } = await params
   
   if (!session || session.user?.role !== 'CONTRIBUTOR') {
     redirect('/auth/signin')
@@ -19,6 +26,7 @@ export default async function EditListing({
 
   const { id } = await params
   const listing = await prisma.listing.findUnique({
+
     where: { 
       id,
       userId: session.user.id 
@@ -35,6 +43,11 @@ export default async function EditListing({
       timeline: true,
       impactMetrics: true,
       mediaUrls: true,
+
+    where: {
+      id,
+      userId: session.user.id,
+
     },
   })
 
@@ -42,7 +55,9 @@ export default async function EditListing({
     notFound()
   }
 
+
   const formattedListing = {
+
     ...listing,
     impactMetrics: listing.impactMetrics as Record<string, any>,
   }
@@ -63,6 +78,8 @@ export default async function EditListing({
           <div className="px-4 py-5 sm:p-6">
             <ListingForm
               initialData={formattedListing}
+
+
               isEdit={true}
             />
           </div>

@@ -20,12 +20,15 @@ async function getListings(searchParams: SearchParamsType) {
     status: 'ACTIVE',
     ...(searchParams.country && { countryCode: searchParams.country }),
     ...(searchParams.sector && { sector: searchParams.sector }),
+
     ...(searchParams.minSize && { sizeMin: { gte: parseFloat(searchParams.minSize) } }),
     ...(searchParams.maxSize && { sizeMax: { lte: parseFloat(searchParams.maxSize) } }),
     ...(searchParams.q && {
       OR: [
         { title: { contains: searchParams.q, mode: Prisma.QueryMode.insensitive } },
         { description: { contains: searchParams.q, mode: Prisma.QueryMode.insensitive } },
+
+
       ],
     }),
   }
@@ -56,6 +59,7 @@ async function getFilters() {
   }
 }
 
+
 export default async function Investments(
   props: {
     searchParams: Promise<SearchParamsType>
@@ -64,6 +68,7 @@ export default async function Investments(
   const resolvedSearchParams = await props.searchParams
   const [listings, filters] = await Promise.all([
     getListings(resolvedSearchParams),
+
     getFilters(),
   ])
 
@@ -145,8 +150,9 @@ export default async function Investments(
               placeholder="Min %"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             />
-          </div>
 
+          </div>
+        </div>
           <div className="sm:col-span-2 md:col-span-3 lg:col-span-4">
             <label htmlFor="search" className="block text-sm font-medium text-gray-700">
               Search
@@ -161,67 +167,43 @@ export default async function Investments(
             />
           </div>
 
-          <div className="sm:col-span-2 md:col-span-3 lg:col-span-4">
-            <button
-              type="submit"
-              className="w-full rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-            >
-              Apply Filters
-            </button>
-          </div>
-        </form>
 
-        {/* Listings grid */}
-        <div className="mt-16 grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-          {listings.map((listing) => (
-            <article key={listing.id} className="flex flex-col items-start">
-              <div className="w-full">
-                <div className="flex items-center gap-x-4 text-xs">
-                  <time dateTime={listing.createdAt.toISOString()} className="text-gray-500">
-                    {new Date(listing.createdAt).toLocaleDateString()}
-                  </time>
-                  <span className="relative z-10 rounded-full bg-indigo-50 px-3 py-1.5 font-medium text-indigo-600">
-                    {listing.sector}
-                  </span>
-                </div>
-                <div className="group relative">
-                  <h3 className="mt-3 text-lg font-semibold leading-6 text-gray-900 group-hover:text-gray-600">
-                    <Link href={`/investments/${listing.id}`}>
-                      <span className="absolute inset-0" />
-                      {listing.title}
-                    </Link>
+              {/* Add other filters similarly */}
+            </form>
+          </div>
+
+          {/* Listings */}
+          <div className="lg:col-span-2">
+            <div className="grid gap-6 sm:grid-cols-2">
+              {listings.map((listing) => (
+                <Link
+                  key={listing.id}
+                  href={`/investments/${listing.id}`}
+                  className="block rounded-lg border border-gray-200 p-6 hover:border-gray-300 hover:shadow-sm"
+                >
+                  <h3 className="text-lg font-medium text-gray-900">
+                    {listing.title}
                   </h3>
-                  <p className="mt-5 line-clamp-3 text-sm leading-6 text-gray-600">
+                  <p className="mt-2 text-sm text-gray-600 line-clamp-2">
                     {listing.description}
                   </p>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-4">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">Investment Size</p>
-                    <p className="text-sm text-gray-600">
-                      ${listing.sizeMin.toLocaleString()} - ${listing.sizeMax.toLocaleString()}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">Expected Return</p>
-                    <p className="text-sm text-gray-600">{listing.returnPct}%</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">Country</p>
-                    <p className="text-sm text-gray-600">{listing.countryCode}</p>
-                  </div>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-
-        {listings.length === 0 && (
-          <div className="mt-16 text-center">
-            <h3 className="text-lg font-semibold text-gray-900">No opportunities found</h3>
-            <p className="mt-1 text-gray-500">Try adjusting your filters or search terms</p>
+                  <dl className="mt-4 grid grid-cols-2 gap-4">
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">Size</dt>
+                      <dd className="text-sm text-gray-900">
+                        ${listing.sizeMin.toLocaleString()} - ${listing.sizeMax.toLocaleString()}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">Return</dt>
+                      <dd className="text-sm text-gray-900">{listing.returnPct}%</dd>
+                    </div>
+                  </dl>
+                </Link>
+              ))}
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   )

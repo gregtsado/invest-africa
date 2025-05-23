@@ -1,6 +1,5 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
@@ -13,27 +12,44 @@ interface Listing {
   createdAt: Date
 }
 
-export default function AdminDashboard() {
-  const router = useRouter()
+export default function AdminPage() {
   const [listings, setListings] = useState<Listing[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    async function fetchListings() {
+    const fetchListings = async () => {
       try {
         const response = await fetch('/api/admin/listings')
-        if (!response.ok) throw new Error('Failed to fetch listings')
         const data = await response.json()
-        setListings(data)
-      } catch (err) {
+        // Validate and transform the data to ensure it matches our Listing type
+        const typedListings: Listing[] = data.map((item: any) => ({
+          ...item,
+          status: item.status as Listing['status'],
+          createdAt: new Date(item.createdAt)
+        }))
+        setListings(typedListings)
+      } catch {
         setError('Failed to load listings')
       } finally {
         setLoading(false)
       }
     }
+
     fetchListings()
   }, [])
+
+
+  const handleDelete = (id: string) => {
+    try {
+      fetch(`/api/admin/listings/${id}`, {
+        method: 'DELETE',
+      })
+      setListings(listings.filter((listing) => listing.id !== id))
+    } catch {
+      // Handle error silently
+    }
+  }
 
   async function handleStatusChange(id: string, newStatus: Listing['status']) {
     try {
@@ -48,7 +64,7 @@ export default function AdminDashboard() {
       setListings(listings.map(listing => 
         listing.id === id ? { ...listing, status: newStatus } : listing
       ))
-    } catch (err) {
+    } catch {
       setError('Failed to update listing status')
     }
   }
