@@ -1,9 +1,10 @@
 'use client'
 
+import React from 'react';
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, use } from 'react';
 
 interface Listing {
   id: string
@@ -20,11 +21,12 @@ interface Listing {
   createdAt: Date
 }
 
-export default function InvestmentDetail({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default function InvestmentDetail(
+  props: {
+    params: Promise<{ id: string }>
+  }
+) {
+  const params = use(props.params);
   const router = useRouter()
   const { data: session } = useSession()
   const [loading, setLoading] = useState(false)
@@ -144,7 +146,7 @@ export default function InvestmentDetail({
               <ul>
                 {Object.entries(listing.impactMetrics).map(([key, value]) => (
                   <li key={key}>
-                    <strong>{key}:</strong> {value}
+                    <strong>{key}:</strong> {String(value)} {/* Cast value to string explicitly */}
                   </li>
                 ))}
               </ul>

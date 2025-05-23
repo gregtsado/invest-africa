@@ -35,7 +35,7 @@ export default function AdminDashboard() {
     fetchListings()
   }, [])
 
-  async function handleStatusChange(id: string, newStatus: string) {
+  async function handleStatusChange(id: string, newStatus: Listing['status']) {
     try {
       const response = await fetch(`/api/admin/listings/${id}`, {
         method: 'PATCH',

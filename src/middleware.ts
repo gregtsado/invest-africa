@@ -15,12 +15,20 @@ export function middleware(request: NextRequestWithAuth) {
     '/auth/signup',
     '/api/auth/register',
   ]
-  if (publicRoutes.includes(pathname)) {
+  // Check if the current path is a public route or a dynamic segment of a public route
+  if (publicRoutes.some(route => pathname === route || (route.endsWith('/') && pathname.startsWith(route)))) {
+    return NextResponse.next()
+  }
+
+  // For /investments/[id] routes, allow access without authentication
+  if (pathname.startsWith('/investments/') && pathname.split('/').length === 3) {
     return NextResponse.next()
   }
 
   // For all other routes, use withAuth middleware
-  return withAuthMiddleware(request)
+  // The withAuth-wrapped middleware expects (request, event) but Next.js only passes request.
+  // We pass an empty object as the second argument to satisfy the type signature.
+  return withAuthMiddleware(request, {} as any) // Added {} as any for the second argument
 }
 
 const withAuthMiddleware = withAuth(

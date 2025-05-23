@@ -7,24 +7,25 @@ interface SearchParamsType {
   sector?: string
   minSize?: string
   maxSize?: string
-  minReturn?: string
-  search?: string
+  minReturn?: string // Added minReturn
+  sort?: string
+  page?: string
+  limit?: string
+  q?: string
+  mode?: 'insensitive' | 'default'
 }
 
-type SearchParams = Promise<SearchParamsType>
-
-async function getListings(searchParamsPromise: SearchParams) {
-  const searchParams = await searchParamsPromise
+async function getListings(searchParams: SearchParamsType) {
   const where: Prisma.ListingWhereInput = {
     status: 'ACTIVE',
     ...(searchParams.country && { countryCode: searchParams.country }),
     ...(searchParams.sector && { sector: searchParams.sector }),
     ...(searchParams.minSize && { sizeMin: { gte: parseFloat(searchParams.minSize) } }),
     ...(searchParams.maxSize && { sizeMax: { lte: parseFloat(searchParams.maxSize) } }),
-    ...(searchParams.search && {
+    ...(searchParams.q && {
       OR: [
-        { title: { contains: searchParams.search, mode: Prisma.QueryMode.insensitive } },
-        { description: { contains: searchParams.search, mode: Prisma.QueryMode.insensitive } },
+        { title: { contains: searchParams.q, mode: Prisma.QueryMode.insensitive } },
+        { description: { contains: searchParams.q, mode: Prisma.QueryMode.insensitive } },
       ],
     }),
   }
@@ -55,14 +56,14 @@ async function getFilters() {
   }
 }
 
-export default async function Investments({
-  searchParams,
-}: {
-  searchParams: SearchParams
-}) {
-  const [params, listings, filters] = await Promise.all([
-    searchParams,
-    getListings(searchParams),
+export default async function Investments(
+  props: {
+    searchParams: Promise<SearchParamsType>
+  }
+) {
+  const resolvedSearchParams = await props.searchParams
+  const [listings, filters] = await Promise.all([
+    getListings(resolvedSearchParams),
     getFilters(),
   ])
 
@@ -87,7 +88,7 @@ export default async function Investments({
             <select
               id="country"
               name="country"
-              defaultValue={params.country}
+              defaultValue={resolvedSearchParams.country}
               className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
             >
               <option value="">All Countries</option>
@@ -106,7 +107,7 @@ export default async function Investments({
             <select
               id="sector"
               name="sector"
-              defaultValue={params.sector}
+              defaultValue={resolvedSearchParams.sector}
               className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
             >
               <option value="">All Sectors</option>
@@ -126,7 +127,7 @@ export default async function Investments({
               type="number"
               id="minSize"
               name="minSize"
-              defaultValue={params.minSize}
+              defaultValue={resolvedSearchParams.minSize}
               placeholder="Min $"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             />
@@ -140,7 +141,7 @@ export default async function Investments({
               type="number"
               id="minReturn"
               name="minReturn"
-              defaultValue={params.minReturn}
+              defaultValue={resolvedSearchParams.minReturn}
               placeholder="Min %"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             />
@@ -154,7 +155,7 @@ export default async function Investments({
               type="text"
               id="search"
               name="search"
-              defaultValue={params.search}
+              defaultValue={resolvedSearchParams.q}
               placeholder="Search opportunities..."
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             />
