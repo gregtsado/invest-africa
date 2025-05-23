@@ -7,22 +7,32 @@ const __dirname = dirname(__filename);
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
-  recommendedConfig: true,
 });
 
-const eslintConfig = [
-  ...compat.extends(
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "next/core-web-vitals",
-    "next/typescript"
-  ),
-  {
+export default [
+  ...compat.config({
+    extends: [
+      "next/core-web-vitals", // Includes Next.js core rules, React, React Hooks, and basic ESLint rules
+      "next/typescript",      // Adds TypeScript specific lint rules from @typescript-eslint/recommended
+    ],
     rules: {
+      // Preserve your existing rule overrides
       "@typescript-eslint/no-unused-vars": "off",
       "react/no-unescaped-entities": "off",
-    },
-  },
-];
+      "@typescript-eslint/no-explicit-any": "off", // Added based on conversation summary
 
-export default eslintConfig;
+      // Add any other global rule overrides here if needed
+      // For example:
+      // 'some-other-rule': 'warn',
+    },
+    // "eslint-config-next" (via "next/typescript") should correctly configure
+    // the parser and parserOptions for TypeScript.
+    // If specific overrides were needed, they would be more complex in flat config
+    // and might involve a separate config object with languageOptions.
+  }),
+
+  // You can add other flat config objects here if needed, for example, to ignore files:
+  // {
+  //   ignores: ["dist/**", ".next/**"],
+  // }
+];

@@ -1,33 +1,42 @@
-import React from 'react';
-import { notFound } from 'next/navigation';
-import { prisma } from '@/lib/prisma';
-import { ListingForm } from '@/components/ListingForm';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma'
+import { ListingForm } from '@/components/ListingForm'
+import { notFound } from 'next/navigation'
+import { Prisma } from '@prisma/client'
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>
 }
 
-export default async function EditListing({ params }: PageProps) {
-  const session = await getServerSession(authOptions);
-  
-  if (!session || session.user?.role !== 'ADMIN') {
-    notFound();
-  }
-
+export default async function EditListing({
+  params,
+}: PageProps) {
+  const { id } = await params
   const listing = await prisma.listing.findUnique({
-    where: { id: params.id },
-  });
+    where: { id },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      countryCode: true,
+      sector: true,
+      sizeMin: true,
+      sizeMax: true,
+      returnPct: true,
+      timeline: true,
+      impactMetrics: true,
+      mediaUrls: true,
+    },
+  })
 
   if (!listing) {
-    notFound();
+    notFound()
   }
 
-  const listingData = {
+  // Cast the JSON value to Record<string, any>
+  const formattedListing = {
     ...listing,
-    impactMetrics: listing.impactMetrics as Record<string, unknown>,
-  };
+    impactMetrics: listing.impactMetrics as Record<string, any>,
+  }
 
   return (
     <div className="py-10">
@@ -44,12 +53,12 @@ export default async function EditListing({ params }: PageProps) {
         <div className="bg-white shadow sm:rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <ListingForm
-              initialData={listingData}
+              initialData={formattedListing}
               isEdit={true}
             />
           </div>
         </div>
       </div>
     </div>
-  );
+  )
 }

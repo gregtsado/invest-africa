@@ -39,6 +39,7 @@ export default function AdminPage() {
     fetchListings()
   }, [])
 
+
   const handleDelete = (id: string) => {
     try {
       fetch(`/api/admin/listings/${id}`, {

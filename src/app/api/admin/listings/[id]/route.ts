@@ -3,25 +3,20 @@ import { getServerSession } from 'next-auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { authOptions } from '@/lib/auth'
 
-type Context = {
-  params: Promise<{ id: string }>
-}
 
-export async function PATCH(
-  req: NextRequest,
-  context: Context
-) {
+export async function PATCH(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
+
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session || session.user?.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = await context.params
+
+    const { id } = params // ✅ FIX: No need for async handling
+
     const data = await req.json()
     const listing = await prisma.listing.update({
       where: { id },
@@ -31,38 +26,28 @@ export async function PATCH(
     return NextResponse.json(listing)
   } catch (error) {
     console.error('Error updating listing:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-export async function DELETE(
-  req: NextRequest,
-  context: Context
-) {
+
+export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
+
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session || session.user?.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = await context.params
-    await prisma.listing.delete({
-      where: { id },
-    })
+    const { id } = params
+    await prisma.listing.delete({ where: { id } })
 
-    return NextResponse.json({ status: 'ok' })
+    return NextResponse.json({ success: true })
+
   } catch (error) {
     console.error('Error deleting listing:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

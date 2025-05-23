@@ -1,6 +1,15 @@
 import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 
+type RouteParams = Promise<{ id: string }>
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: RouteParams }
+) {
+  try {
+    const { id } = await params
+
 type Context = {
   params: Promise<{ id: string }>
 }
@@ -11,6 +20,7 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params
+
     const listing = await prisma.listing.findUnique({
       where: { id },
     })

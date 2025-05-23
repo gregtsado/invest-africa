@@ -1,8 +1,14 @@
-import { getServerSession } from 'next-auth'
+
+'use client'
+
+import React from 'react';
+import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { useRouter } from 'next/navigation'
+import { useState, use } from 'react';
+import Image from 'next/image';
+
+
 
 interface Listing {
   id: string
@@ -19,9 +25,58 @@ interface Listing {
   createdAt: Date
 }
 
-type PageProps = {
-  params: Promise<{ id: string }>
-}
+export default function InvestmentDetail(
+  props: {
+    params: Promise<{ id: string }>
+  }
+) {
+  const params = use(props.params);
+  const router = useRouter()
+  const { data: session } = useSession()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [listing, setListing] = useState<Listing | null>(null)
+  const [selectedOption, setSelectedOption] = useState<'SELF' | 'MANAGED' | 'FUND' | null>(null)
+  const [amount, setAmount] = useState('')
+  const [notes, setNotes] = useState('')
+
+  // Fetch listing data
+  React.useEffect(() => {
+    async function fetchListing() {
+      try {
+        const response = await fetch(`/api/listings/${params.id}`)
+        if (!response.ok) throw new Error('Failed to fetch listing')
+        const data = await response.json()
+        setListing(data)
+      } catch (err) {
+        setError('Failed to load investment opportunity')
+      }
+    }
+    fetchListing()
+  }, [params.id])
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!selectedOption || !amount) {
+      setError('Please fill in all required fields')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch('/api/engagement-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          listingId: params.id,
+          type: selectedOption,
+          amount: parseFloat(amount),
+          details: notes,
+        }),
+      })
+
 
 export default async function InvestmentPage({ params }: PageProps) {
   const session = await getServerSession(authOptions)
@@ -55,15 +110,35 @@ export default async function InvestmentPage({ params }: PageProps) {
                 <dt className="text-sm font-medium text-gray-500">Description</dt>
                 <dd className="mt-1 text-sm text-gray-900">{listing.description}</dd>
               </div>
+            <div className="mt-8 prose prose-indigo max-w-none">
+              <h2>Project Description</h2>
+              <p>{listing.description}</p>
 
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Country</dt>
-                <dd className="mt-1 text-sm text-gray-900">{listing.countryCode}</dd>
-              </div>
+              <h2>Impact Metrics</h2>
+              <ul>
+                {Object.entries(listing.impactMetrics).map(([key, value]) => (
+                  <li key={key}>
+                    <strong>{key}:</strong> {String(value)} {/* Cast value to string explicitly */}
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Sector</dt>
-                <dd className="mt-1 text-sm text-gray-900">{listing.sector}</dd>
+            {listing.mediaUrls.length > 0 && (
+              <div className="mt-8">
+                <h2 className="text-lg font-semibold text-gray-900">Gallery</h2>
+                <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                  {listing.mediaUrls.map((url, index) => (
+                    <Image
+                      key={index}
+                      src={url}
+                      alt={`Project image ${index + 1}`}
+                      className="rounded-lg object-cover"
+                      width={500}
+                      height={300}
+                    />
+                  ))}
+                </div>
               </div>
 
               <div>
