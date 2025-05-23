@@ -1,18 +1,41 @@
 import { prisma } from '@/lib/prisma'
 import { ListingForm } from '@/components/ListingForm'
 import { notFound } from 'next/navigation'
+import { Prisma } from '@prisma/client'
+
+interface PageProps {
+  params: Promise<{ id: string }>
+}
 
 export default async function EditListing({
   params,
-}: {
-  params: { id: string }
-}) {
+}: PageProps) {
+  const { id } = await params
   const listing = await prisma.listing.findUnique({
-    where: { id: params.id },
+    where: { id },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      countryCode: true,
+      sector: true,
+      sizeMin: true,
+      sizeMax: true,
+      returnPct: true,
+      timeline: true,
+      impactMetrics: true,
+      mediaUrls: true,
+    },
   })
 
   if (!listing) {
     notFound()
+  }
+
+  // Cast the JSON value to Record<string, any>
+  const formattedListing = {
+    ...listing,
+    impactMetrics: listing.impactMetrics as Record<string, any>,
   }
 
   return (
@@ -30,7 +53,7 @@ export default async function EditListing({
         <div className="bg-white shadow sm:rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <ListingForm
-              initialData={listing}
+              initialData={formattedListing}
               isEdit={true}
             />
           </div>

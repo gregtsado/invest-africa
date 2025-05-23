@@ -1,7 +1,8 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import { Prisma } from '@prisma/client'
 
-interface SearchParams {
+interface SearchParamsType {
   country?: string
   sector?: string
   minSize?: string
@@ -10,18 +11,20 @@ interface SearchParams {
   search?: string
 }
 
-async function getListings(searchParams: SearchParams) {
-  const where = {
+type SearchParams = Promise<SearchParamsType>
+
+async function getListings(searchParamsPromise: SearchParams) {
+  const searchParams = await searchParamsPromise
+  const where: Prisma.ListingWhereInput = {
     status: 'ACTIVE',
     ...(searchParams.country && { countryCode: searchParams.country }),
     ...(searchParams.sector && { sector: searchParams.sector }),
     ...(searchParams.minSize && { sizeMin: { gte: parseFloat(searchParams.minSize) } }),
     ...(searchParams.maxSize && { sizeMax: { lte: parseFloat(searchParams.maxSize) } }),
-    ...(searchParams.minReturn && { returnPct: { gte: parseFloat(searchParams.minReturn) } }),
     ...(searchParams.search && {
       OR: [
-        { title: { contains: searchParams.search, mode: 'insensitive' } },
-        { description: { contains: searchParams.search, mode: 'insensitive' } },
+        { title: { contains: searchParams.search, mode: Prisma.QueryMode.insensitive } },
+        { description: { contains: searchParams.search, mode: Prisma.QueryMode.insensitive } },
       ],
     }),
   }
@@ -57,7 +60,8 @@ export default async function Investments({
 }: {
   searchParams: SearchParams
 }) {
-  const [listings, filters] = await Promise.all([
+  const [params, listings, filters] = await Promise.all([
+    searchParams,
     getListings(searchParams),
     getFilters(),
   ])
@@ -83,7 +87,7 @@ export default async function Investments({
             <select
               id="country"
               name="country"
-              defaultValue={searchParams.country}
+              defaultValue={params.country}
               className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
             >
               <option value="">All Countries</option>
@@ -102,7 +106,7 @@ export default async function Investments({
             <select
               id="sector"
               name="sector"
-              defaultValue={searchParams.sector}
+              defaultValue={params.sector}
               className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
             >
               <option value="">All Sectors</option>
@@ -122,7 +126,7 @@ export default async function Investments({
               type="number"
               id="minSize"
               name="minSize"
-              defaultValue={searchParams.minSize}
+              defaultValue={params.minSize}
               placeholder="Min $"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             />
@@ -136,7 +140,7 @@ export default async function Investments({
               type="number"
               id="minReturn"
               name="minReturn"
-              defaultValue={searchParams.minReturn}
+              defaultValue={params.minReturn}
               placeholder="Min %"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             />
@@ -150,7 +154,7 @@ export default async function Investments({
               type="text"
               id="search"
               name="search"
-              defaultValue={searchParams.search}
+              defaultValue={params.search}
               placeholder="Search opportunities..."
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             />

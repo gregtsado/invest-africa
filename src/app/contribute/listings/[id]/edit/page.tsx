@@ -1,29 +1,50 @@
 import { prisma } from '@/lib/prisma'
 import { ListingForm } from '@/components/ListingForm'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
 
-export default async function EditContributorListing({
+interface PageProps {
+  params: Promise<{ id: string }>
+}
+
+export default async function EditListing({
   params,
-}: {
-  params: { id: string }
-}) {
+}: PageProps) {
   const session = await getServerSession(authOptions)
   
-  if (!session || !['ADMIN', 'CONTRIBUTOR'].includes(session.user?.role as string)) {
-    notFound()
+  if (!session || session.user?.role !== 'CONTRIBUTOR') {
+    redirect('/auth/signin')
   }
 
+  const { id } = await params
   const listing = await prisma.listing.findUnique({
-    where: {
-      id: params.id,
-      userId: session.user.id, // Ensure the listing belongs to the user
+    where: { 
+      id,
+      userId: session.user.id 
+    },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      countryCode: true,
+      sector: true,
+      sizeMin: true,
+      sizeMax: true,
+      returnPct: true,
+      timeline: true,
+      impactMetrics: true,
+      mediaUrls: true,
     },
   })
 
   if (!listing) {
     notFound()
+  }
+
+  const formattedListing = {
+    ...listing,
+    impactMetrics: listing.impactMetrics as Record<string, any>,
   }
 
   return (
@@ -34,14 +55,14 @@ export default async function EditContributorListing({
             Edit Investment Opportunity
           </h1>
           <p className="mt-2 text-sm text-gray-600">
-            Update the details of your investment listing
+            Update the details of your investment listing.
           </p>
         </div>
 
         <div className="bg-white shadow sm:rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <ListingForm
-              initialData={listing}
+              initialData={formattedListing}
               isEdit={true}
             />
           </div>
