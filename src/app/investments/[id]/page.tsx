@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, use } from 'react';
+import Image from 'next/image';
 
 interface Listing {
   id: string
@@ -157,11 +158,13 @@ export default function InvestmentDetail(
                 <h2 className="text-lg font-semibold text-gray-900">Gallery</h2>
                 <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
                   {listing.mediaUrls.map((url, index) => (
-                    <img
+                    <Image
                       key={index}
                       src={url}
                       alt={`Project image ${index + 1}`}
                       className="rounded-lg object-cover"
+                      width={500}
+                      height={300}
                     />
                   ))}
                 </div>

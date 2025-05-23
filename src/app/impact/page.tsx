@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import Image from 'next/image'
 
 async function getImpactMetrics() {
   const [totalInvestments, activeListings, successfulDeals] = await Promise.all([
@@ -150,10 +151,12 @@ export default async function Impact() {
             {successStories.map((story) => (
               <article key={story.title} className="bg-white p-8 rounded-2xl shadow-sm ring-1 ring-gray-200">
                 <div className="relative w-full">
-                  <img
+                  <Image
                     src={story.image}
                     alt={story.title}
                     className="aspect-[16/9] w-full rounded-2xl bg-gray-100 object-cover sm:aspect-[2/1] lg:aspect-[3/2]"
+                    width={500}
+                    height={300}
                   />
                 </div>
                 <div className="mt-8">

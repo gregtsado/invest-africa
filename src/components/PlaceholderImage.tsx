@@ -1,5 +1,7 @@
+import Image, { StaticImageData } from 'next/image';
+
 interface PlaceholderImageProps {
-  src?: string
+  src?: string | StaticImageData // Updated src type
   alt: string
   className?: string
 }
@@ -18,10 +20,12 @@ export function PlaceholderImage({ src, alt, className = '' }: PlaceholderImageP
   }
 
   return (
-    <img
-      src={src}
+    <Image
+      src={src} // src is now correctly typed
       alt={alt}
       className={className}
+      width={500} 
+      height={300} 
     />
   )
 }
